@@ -13,7 +13,7 @@ NEWS_URL = "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko"
 
 def get_news_titles(url, max_count=20):
     res = requests.get(url)
-    soup = BeautifulSoup(res.content, "lxml-xml")
+    soup = BeautifulSoup(res.content, "lxml")
     items = soup.find_all("item")
     news_list = []
     for item in items:
