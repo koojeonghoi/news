@@ -1,0 +1,28 @@
+name: Daily News Telegram Sender
+
+on:
+  schedule:
+    - cron: '0 23 * * *'  # 매일 한국 시간 오전 8시 (UTC+9 기준)
+
+jobs:
+  send_news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 python-telegram-bot
+
+      - name: Run news sender script
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          EXCLUDE_CATEGORIES: '정치,경제,스포츠'
+        run: python news_sender.py
