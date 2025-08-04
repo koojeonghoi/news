@@ -1,28 +1,30 @@
-name: Daily News Telegram Sender
+name: Send News Every Morning
 
 on:
   schedule:
-    - cron: '0 23 * * *'  # 매일 한국 시간 오전 8시 (UTC+9 기준)
+    - cron: '0 22 * * *'  # 매일 오전 7시 (KST 기준), UTC+9 = 22:00 UTC
+  workflow_dispatch:
 
 jobs:
-  send_news:
+  send-news:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          pip install requests beautifulsoup4 python-telegram-bot
+          python -m pip install --upgrade pip
+          pip install beautifulsoup4 lxml requests python-telegram-bot
 
-      - name: Run news sender script
+      - name: Run script
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          EXCLUDE_CATEGORIES: '정치,경제,스포츠'
         run: python news_sender.py
