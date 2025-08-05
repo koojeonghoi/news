@@ -39,7 +39,7 @@ def get_news_titles(url):
 
 import asyncio
 
-async def send_telegram_sync(BOT_TOKEN, CHAT_ID, message)):
+async def send_telegram_sync(BOT_TOKEN, CHAT_ID, message):
     bot = Bot(token=bot_token)
     await bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
 
