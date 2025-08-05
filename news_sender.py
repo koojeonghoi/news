@@ -31,11 +31,18 @@ def get_news_titles(url):
     titles = []
     for item in news_items:
         title_tag = item.find("title")
+        link_tag = item.find("link")
+        
         if title_tag:
             title = title_tag.get_text()
-            titles.append(title)
+            link = link_tag.get_text() if link_tag else ""
+            
+            if link:
+                titles.append(f"• [{title}]({link})")
+            else:
+                titles.append(f"• {title}")
     
-    return titles  # 이 줄이 빠져있을 가능성!
+    return titles
 
 import asyncio
 
