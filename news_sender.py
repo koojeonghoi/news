@@ -37,16 +37,21 @@ def get_news_titles(url):
     
     return titles  # 이 줄이 빠져있을 가능성!
 
-def send_to_telegram(bot_token, chat_id, message):
+import asyncio
+
+async def send_telegram_sync(BOT_TOKEN, CHAT_ID, message)):
     bot = Bot(token=bot_token)
-    bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
+    await bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
+
+def send_telegram_sync(bot_token, chat_id, message):
+    asyncio.run(send_telegram_sync(BOT_TOKEN, CHAT_ID, message)))
 
 def main():
     today = datetime.now().strftime("%Y년 %m월 %d일")
     news_items = get_news_titles(NEWS_URL)
     if news_items:
         message = f"🗞️ *{today} 구글 뉴스*\n\n" + "\n".join(news_items)
-        send_to_telegram(BOT_TOKEN, CHAT_ID, message)
+        send_telegram_sync(BOT_TOKEN, CHAT_ID, message)
     else:
         print("❗ 필터링된 뉴스가 없습니다.")
 
