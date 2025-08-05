@@ -1,7 +1,7 @@
 name: Send News Every Morning
 on:
   schedule:
-    - cron: '20 23 * * *'  # 매일 오전 8:20 (KST 기준)
+    - cron: '0 22 * * *'  # 매일 오전 8:20 (KST 기준)
   workflow_dispatch:       # 수동 실행 가능
 jobs:
   send-news:
