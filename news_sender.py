@@ -43,8 +43,8 @@ async def send_telegram_sync(BOT_TOKEN, CHAT_ID, message):
     bot = Bot(token=bot_token)
     await bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
 
-def send_telegram_sync(bot_token, chat_id, message):
-    asyncio.run(send_telegram_sync(BOT_TOKEN, CHAT_ID, message))
+def send_telegram_sync(BOT_TOKEN, CHAT_ID, message):
+    asyncio.run(send_to_telegram(BOT_TOKEN, CHAT_ID, message))  # async 함수 호출
 
 def main():
     today = datetime.now().strftime("%Y년 %m월 %d일")
