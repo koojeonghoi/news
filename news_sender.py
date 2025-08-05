@@ -16,7 +16,7 @@ def get_news_titles(url):
     print(f"HTTP Status: {res.status_code}")
     print(f"Content length: {len(res.content)}")
     
-    soup = BeautifulSoup(res.content, "lxml")
+    soup = BeautifulSoup(res.content, features="xml")
     
     # RSS의 item 태그들 찾기
     news_items = soup.find_all("item")
@@ -35,7 +35,7 @@ def get_news_titles(url):
             title = title_tag.get_text()
             titles.append(title)
     
-    return titles
+    return titles  # 이 줄이 빠져있을 가능성!
 
 def send_to_telegram(bot_token, chat_id, message):
     bot = Bot(token=bot_token)
