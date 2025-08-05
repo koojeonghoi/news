@@ -11,19 +11,31 @@ EXCLUDE_CATEGORIES = os.getenv("EXCLUDE_CATEGORIES", "").split(",")
 
 NEWS_URL = "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko"
 
-def get_news_titles(url, max_count=20):
+def get_news_titles(url):
     res = requests.get(url)
-    soup = BeautifulSoup(res.content, "xml")
-    items = soup.find_all("item")
-    news_list = []
-    for item in items:
-        title = item.title.text.strip()
-        link = item.link.text.strip()
-        if not any(cat in title for cat in EXCLUDE_CATEGORIES):
-            news_list.append(f"• [{title}]({link})")
-        if len(news_list) >= max_count:
-            break
-    return news_list
+    print(f"HTTP Status: {res.status_code}")
+    print(f"Content length: {len(res.content)}")
+    
+    soup = BeautifulSoup(res.content, "lxml")
+    
+    # RSS의 item 태그들 찾기
+    news_items = soup.find_all("item")
+    print(f"Found {len(news_items)} news items")
+    
+    # 처음 몇 개 아이템의 제목 출력해보기
+    for i, item in enumerate(news_items[:3]):
+        title_tag = item.find("title")
+        if title_tag:
+            print(f"Title {i+1}: {title_tag.get_text()}")
+    
+    titles = []
+    for item in news_items:
+        title_tag = item.find("title")
+        if title_tag:
+            title = title_tag.get_text()
+            titles.append(title)
+    
+    return titles
 
 def send_to_telegram(bot_token, chat_id, message):
     bot = Bot(token=bot_token)
