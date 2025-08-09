@@ -1,72 +1,51 @@
-import os
-import requests
-from bs4 import BeautifulSoup
+import asyncio
+import feedparser
 from datetime import datetime
 from telegram import Bot
 
-# 환경변수에서 직접 읽음
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-EXCLUDE_CATEGORIES = os.getenv("EXCLUDE_CATEGORIES", "").split(",")
+# === 환경설정 ===
+BOT_TOKEN = "여기에_봇_토큰"
+CHAT_ID = "여기에_CHAT_ID"
 
-NEWS_URL = "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko"
+# === 구글 뉴스 가져오기 ===
+def fetch_news():
+    url = "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko"
+    feed = feedparser.parse(url)
+    return feed.entries
 
-def get_news_titles(url):
-    res = requests.get(url)
-    print(f"HTTP Status: {res.status_code}")
-    print(f"Content length: {len(res.content)}")
-    
-    soup = BeautifulSoup(res.content, features="xml")
-    
-    # RSS의 item 태그들 찾기
-    news_items = soup.find_all("item")
-    print(f"Found {len(news_items)} news items")
-    
-    # 처음 몇 개 아이템의 제목 출력해보기
-    for i, item in enumerate(news_items[:3]):
-        title_tag = item.find("title")
-        if title_tag:
-            print(f"Title {i+1}: {title_tag.get_text()}")
-    
-    titles = []
-    for item in news_items:
-        title_tag = item.find("title")
-        link_tag = item.find("link")
-        
-        if title_tag:
-            title = title_tag.get_text()
-            link = link_tag.get_text() if link_tag else ""
-            
-            if link:
-                titles.append(f"• [{title}]({link})")
-            else:
-                titles.append(f"• {title}")
-    
-    return titles
-
-import asyncio
-import telegram
-
-MAX_MESSAGE_LENGTH = 4000  # 안전 여유 포함
-
+# === 텔레그램 전송 (비동기) ===
 async def send_to_telegram(bot_token, chat_id, message):
-    bot = telegram.Bot(token=bot_token)
-    # 메시지를 일정 길이로 잘라서 순차적으로 전송
-    for i in range(0, len(message), MAX_MESSAGE_LENGTH):
-        chunk = message[i:i + MAX_MESSAGE_LENGTH]
-        await bot.send_message(chat_id=chat_id, text=chunk, parse_mode="Markdown")
+    bot = Bot(token=bot_token)
+    for i in range(0, len(message), 4000):
+        chunk = message[i:i+4000]
+        await bot.send_message(chat_id=chat_id, text=chunk)  # Markdown 제거
 
+# === 동기 래퍼 ===
 def send_telegram_sync(bot_token, chat_id, message):
     asyncio.run(send_to_telegram(bot_token, chat_id, message))
 
+# === 메인 로직 ===
 def main():
-    today = datetime.now().strftime("%Y년 %m월 %d일")
-    news_items = get_news_titles(NEWS_URL)
-    if news_items:
-        message = f"🗞️ *{today} 구글 뉴스*\n\n" + "\n".join(news_items)
-        send_telegram_sync(BOT_TOKEN, CHAT_ID, message)
-    else:
-        print("❗ 필터링된 뉴스가 없습니다.")
+    print("구글 뉴스 가져오는 중...")
+    news_items = fetch_news()
+    print(f"뉴스 {len(news_items)}건 수신 완료")
+
+    message_lines = []
+    message_lines.append(f"📢 오늘의 구글 뉴스 ({datetime.now().strftime('%Y-%m-%d %H:%M')})")
+    message_lines.append(f"총 {len(news_items)}건\n")
+
+    for idx, item in enumerate(news_items, start=1):
+        title = item.title
+        link = item.link
+        message_lines.append(f"{idx}. {title}")
+        message_lines.append(link)
+        message_lines.append("")  # 줄바꿈
+
+    message = "\n".join(message_lines)
+
+    print("텔레그램 전송 시작")
+    send_telegram_sync(BOT_TOKEN, CHAT_ID, message)
+    print("전송 완료")
 
 if __name__ == "__main__":
     main()
