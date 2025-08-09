@@ -45,13 +45,19 @@ def get_news_titles(url):
     return titles
 
 import asyncio
+import telegram
 
-async def send_to_telegram(BOT_TOKEN, CHAT_ID, message):
-    bot = Bot(token=BOT_TOKEN)
-    await bot.send_message(chat_id=CHAT_ID, text=message, parse_mode="Markdown")
+MAX_MESSAGE_LENGTH = 4000  # 안전 여유 포함
 
-def send_telegram_sync(BOT_TOKEN, CHAT_ID, message):
-    asyncio.run(send_to_telegram(BOT_TOKEN, CHAT_ID, message))
+async def send_to_telegram(bot_token, chat_id, message):
+    bot = telegram.Bot(token=bot_token)
+    # 메시지를 일정 길이로 잘라서 순차적으로 전송
+    for i in range(0, len(message), MAX_MESSAGE_LENGTH):
+        chunk = message[i:i + MAX_MESSAGE_LENGTH]
+        await bot.send_message(chat_id=chat_id, text=chunk, parse_mode="Markdown")
+
+def send_telegram_sync(bot_token, chat_id, message):
+    asyncio.run(send_to_telegram(bot_token, chat_id, message))
 
 def main():
     today = datetime.now().strftime("%Y년 %m월 %d일")
