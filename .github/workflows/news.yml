@@ -23,7 +23,6 @@ jobs:
 
       - name: Run news script
         env:
-          # GitHub Secrets의 이름을 여기에 정확히 매칭시킵니다.
-          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python news_sender.py
