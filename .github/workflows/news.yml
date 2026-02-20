@@ -25,4 +25,4 @@ jobs:
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: news_sender.py # 실제 파일 이름으로 수정하세요
+        run: main.py # 실제 파일 이름으로 수정하세요
