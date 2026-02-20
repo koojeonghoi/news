@@ -2,27 +2,29 @@ name: Daily Google News Bot
 
 on:
   schedule:
-    # UTC 기준이므로 한국 시간(KST) 8시는 UTC 23시입니다. (전날 밤 11시)
+    # 한국 시간 기준 매일 오전 8시 (UTC 23시)
     - cron: '0 23 * * *'
-  workflow_dispatch: # 수동 실행 버튼 활성화
+  workflow_dispatch: # 수동 실행 버튼을 활성화하는 옵션
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-          
+
       - name: Install dependencies
         run: |
           pip install feedparser python-telegram-bot
-          
-      - name: Run script
+
+      - name: Run news script
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: main.py # 실제 파일 이름으로 수정하세요
+        # 파일명을 news_sender.py로 정확히 지정해야 합니다.
+        run: python news_sender.py
