@@ -2,9 +2,8 @@ name: Daily Google News Bot
 
 on:
   schedule:
-    # 한국 시간 기준 매일 오전 8시 (UTC 23시)
-    - cron: '0 23 * * *'
-  workflow_dispatch: # 수동 실행 버튼을 활성화하는 옵션
+    - cron: '0 23 * * *' # 매일 아침 8시 (KST)
+  workflow_dispatch: # 수동 실행 버튼
 
 jobs:
   build:
@@ -24,7 +23,7 @@ jobs:
 
       - name: Run news script
         env:
-          # 파이썬 코드(os.getenv)가 사용할 이름 : GitHub Secrets에 저장된 이름
+          # GitHub Secrets의 이름을 여기에 정확히 매칭시킵니다.
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python news_sender.py
