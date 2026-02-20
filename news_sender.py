@@ -4,26 +4,22 @@ import feedparser
 from telegram import Bot
 
 def get_news_titles(url):
-    """Google News RSS에서 뉴스 제목과 링크를 가져오는 함수 (필터링 추가)"""
     feed = feedparser.parse(url)
-    print(f"Found {len(feed.entries)} news items")
     
-    # 제외하고 싶은 키워드 설정
-    exclude_keywords = ['정치', '건강', '의료', '대통령', '국회', '정당'] 
+    # 제외할 키워드 설정
+    exclude_keywords = ['정치', '건강', '의료', '대통령', '국회', '정당', '백신', '암']
     
     news_list = []
     for entry in feed.entries:
         title = entry.title
         link = entry.link
         
-        # 키워드 필터링: 제목에 제외 키워드가 포함되어 있으면 건너뜀
+        # 필터링 로직: 제외 키워드가 제목에 있으면 추가하지 않음
         if any(keyword in title for keyword in exclude_keywords):
             continue
             
-        # HTML 형식으로 링크가 숨겨진 제목 생성
         news_list.append(f'• <a href="{link}">{title}</a>')
     
-    print(f"Filtered down to {len(news_list)} items")
     return news_list
 
 # ... (중략: send_multiple_messages 및 기타 함수는 기존과 동일) ...
