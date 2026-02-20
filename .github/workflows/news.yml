@@ -24,7 +24,7 @@ jobs:
 
       - name: Run news script
         env:
+          # 왼쪽(BOT_TOKEN)은 파이썬이 쓸 이름, 오른쪽(secrets.BOT_TOKEN)은 GitHub 설정 이름
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-        # 파일명을 news_sender.py로 정확히 지정해야 합니다.
         run: python news_sender.py
