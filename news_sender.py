@@ -65,4 +65,36 @@ def main():
         news_items = get_news_titles(NEWS_URL)
         
         if not news_items:
-            print("⚠️ 필
+            print("⚠️ 필터링 후 가져온 뉴스가 없습니다.")
+            return
+        
+        # 메시지들을 여러 개로 분할 (텔레그램 길이 제한 방지)
+        messages = []
+        current_message = "📢 <b>오늘의 주요 뉴스 (정치/건강 제외)</b>\n\n"
+        max_length = 4000
+        
+        for i, news_item in enumerate(news_items):
+            test_line = news_item + "\n\n"
+            test_message = current_message + test_line
+            
+            if len(test_message) > max_length:
+                messages.append(current_message.strip())
+                current_message = f"📢 <b>오늘의 주요 뉴스 (계속)</b>\n\n{test_line}"
+            else:
+                current_message = test_message
+        
+        if current_message.strip():
+            messages.append(current_message.strip())
+        
+        print(f"📤 총 {len(messages)}개 메시지로 {len(news_items)}개 뉴스 전송 중...")
+        
+        # 메시지 전송 실행
+        asyncio.run(send_multiple_messages(BOT_TOKEN, CHAT_ID, messages))
+        print(f"✅ 모든 뉴스 전송 완료! (총 {len(news_items)}개)")
+        
+    except Exception as e:
+        print(f"❌ 오류 발생: {e}")
+        exit(1)
+
+if __name__ == "__main__":
+    main()
