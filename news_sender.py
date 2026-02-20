@@ -31,8 +31,8 @@ def get_news_titles(url):
 def main():
     # Repository secrets에서 환경변수 가져오기
     # 팁: GitHub Secrets 이름과 os.getenv 이름을 동일하게 맞추는 것이 좋습니다.
-    BOT_TOKEN = os.getenv("BOT_TOKEN")
-    CHAT_ID = os.getenv("CHAT_ID")
+    BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
     NEWS_URL = "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko"
     
     if not BOT_TOKEN or not CHAT_ID:
