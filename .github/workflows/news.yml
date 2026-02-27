@@ -2,7 +2,7 @@ name: Daily Google News Bot
 
 on:
   schedule:
-    - cron: '0 23 * * *' # 매일 아침 8시 (KST)
+    - cron: '0 22 * * *' # 매일 아침 7시 (KST)
   workflow_dispatch: # 수동 실행 버튼
 
 jobs:
