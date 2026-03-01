@@ -13,10 +13,12 @@ def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         'chat_id': TELEGRAM_CHAT_ID,
-        'text': text,
-        'parse_mode': 'Markdown'
+        'text': text
+        # 노래 제목 특수문자 에러를 막기 위해 parse_mode='Markdown' 옵션 삭제
     }
-    requests.post(url, json=payload)
+    response = requests.post(url, json=payload)
+    if response.status_code != 200:
+        print(f"전송 실패: {response.text}")
 
 def crawl_melon_new_entries():
     url = "https://www.melon.com/chart/day/index.htm"
@@ -31,14 +33,14 @@ def crawl_melon_new_entries():
     new_entries = []
     
     for song in songs:
-        # 화면에 'NEW'라고 뜨는 곡은 내부적으로 'rank_new'라는 클래스를 가집니다.
-        # 이 아이콘이 존재하는지 확인해서 필터링합니다.
+        # 화면에 'NEW'라고 뜨는 곡의 내부 클래스 확인
         if song.select_one('.rank_new'):
             rank = song.select_one('span.rank').text
             title = song.select_one('div.ellipsis.rank01 a').text
             artist = song.select_one('div.ellipsis.rank02 span a').text
             
-            new_entries.append(f"* {rank}위 (NEW) : {title} - {artist}")
+            # 마크다운 에러를 피하기 위해 별표 대신 동그라미(•) 사용
+            new_entries.append(f"• {rank}위 (NEW) : {title} - {artist}")
             
     return new_entries
 
@@ -46,14 +48,14 @@ if __name__ == "__main__":
     new_songs = crawl_melon_new_entries()
     yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y년 %m월 %d일")
     
-    message = f"🔔 **[멜론 일간차트 진입 곡]**\n기준일: {yesterday}\n\n"
+    message = f"🔔 [멜론 일간차트 진입 곡]\n기준일: {yesterday}\n\n"
     
     if new_songs:
         message += "\n".join(new_songs)
     else:
         message += "오늘은 차트에 새로 진입한 곡이 없습니다."
         
-    message += "\n\n🔗 [차트 확인하기](https://www.melon.com/chart/day/index.htm)"
+    message += "\n\n🔗 차트 확인하기: https://www.melon.com/chart/day/index.htm"
     
     send_telegram_message(message)
     print("멜론 차트 크롤링 및 알림 전송 완료!")
