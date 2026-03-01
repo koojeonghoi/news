@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import os
 from datetime import datetime, timedelta
 
-# 뉴스 봇과 동일한 환경 변수명 적용
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 
@@ -32,8 +31,9 @@ def crawl_melon_new_entries():
     new_entries = []
     
     for song in songs:
-        rank_wrap = song.select_one('.rank_wrap')
-        if rank_wrap and '새로 진입' in rank_wrap.get('title', ''):
+        # 화면에 'NEW'라고 뜨는 곡은 내부적으로 'rank_new'라는 클래스를 가집니다.
+        # 이 아이콘이 존재하는지 확인해서 필터링합니다.
+        if song.select_one('.rank_new'):
             rank = song.select_one('span.rank').text
             title = song.select_one('div.ellipsis.rank01 a').text
             artist = song.select_one('div.ellipsis.rank02 span a').text
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     new_songs = crawl_melon_new_entries()
     yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y년 %m월 %d일")
     
-    message = f"🔔 **[멜론 일간차트 신규 진입 곡]**\n기준일: {yesterday}\n\n"
+    message = f"🔔 **[멜론 일간차트 진입 곡]**\n기준일: {yesterday}\n\n"
     
     if new_songs:
         message += "\n".join(new_songs)
