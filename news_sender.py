@@ -4,46 +4,55 @@ import requests
 from bs4 import BeautifulSoup
 from telegram import Bot
 
-def get_naver_top_30_news():
-    """네이버 6대 카테고리의 주요 뉴스를 5개씩 모아 총 30개를 반환하는 함수"""
+def get_nate_top_30_news():
+    """네이트 시사 종합 랭킹 (많이 본 뉴스) 상위 30개를 크롤링하는 함수"""
     
-    categories = {
-        '100': '정치',
-        '101': '경제',
-        '102': '사회',
-        '103': '생활/문화',
-        '105': 'IT/과학',
-        '104': '세계'
-    }
-    
+    # sc=sisa 파라미터로 연예/스포츠를 제외한 종합 시사 랭킹을 타겟팅합니다.
+    url = "https://news.nate.com/rank/interest?sc=sisa"
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     
     news_list = []
     
-    for section_id, category_name in categories.items():
-        url = f"https://news.naver.com/section/{section_id}"
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        try:
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text, 'html.parser')
-            
-            # 네이버 뉴스 섹션의 헤드라인 기사 블록 추출
-            headlines = soup.select('.sa_text_title')
-            
-            # 각 카테고리별 상위 5개 기사만 추출
-            for article in headlines[:5]:
-                title = article.text.strip()
-                link = article['href']
+        # 네이트 랭킹 리스트 영역 추출
+        items = soup.select('.mduSubjectList a, .postSubjectContent a')
+        
+        count = 1
+        seen_links = set()
+        
+        for item in items:
+            if count > 30:
+                break
                 
-                news_list.append(f'• [{category_name}] <a href="{link}">{title}</a>')
-                
-        except requests.exceptions.RequestException as e:
-            print(f"❌ {category_name} 뉴스 가져오기 실패: {e}")
-            continue
+            # 태그 내부의 불필요한 공백과 줄바꿈 제거
+            title = item.text.strip().replace('\n', '').replace('\r', '')
+            link = item.get('href', '')
             
+            # 텍스트가 비어있거나 '사진' 등 무의미한 텍스트 건너뛰기
+            if not title or title in ['사진', '동영상'] or not link:
+                continue
+                
+            # 상대 경로를 절대 경로로 변환
+            if link.startswith('//'):
+                link = 'https:' + link
+            elif link.startswith('/'):
+                link = 'https://news.nate.com' + link
+                
+            # 중복 링크 방지
+            if link not in seen_links:
+                news_list.append(f'{count}. <a href="{link}">{title}</a>')
+                seen_links.add(link)
+                count += 1
+                
+    except requests.exceptions.RequestException as e:
+        print(f"❌ 네이트 뉴스 가져오기 실패: {e}")
+        
     return news_list
 
 async def send_multiple_messages(bot_token, chat_id, messages):
@@ -75,16 +84,16 @@ def main():
         print("❌ 환경변수가 설정되지 않았습니다!")
         exit(1)
     
-    print("📰 네이버 주요 뉴스 30개 크롤링 중...")
+    print("📰 네이트 많이 본 뉴스 30개 크롤링 중...")
     
-    news_items = get_naver_top_30_news()
+    news_items = get_nate_top_30_news()
     
     if not news_items:
         print("⚠️ 가져온 뉴스가 없습니다.")
         return
     
     messages = []
-    current_message = "📢 <b>오늘의 네이버 주요 뉴스 Top 30</b>\n\n"
+    current_message = "📢 <b>오늘의 가장 많이 본 뉴스 Top 30</b>\n\n"
     max_length = 4000
     
     for i, news_item in enumerate(news_items):
@@ -93,7 +102,7 @@ def main():
         
         if len(test_message) > max_length:
             messages.append(current_message.strip())
-            current_message = f"📢 <b>주요 뉴스 (계속)</b>\n\n{test_line}"
+            current_message = f"📢 <b>많이 본 뉴스 (계속)</b>\n\n{test_line}"
         else:
             current_message = test_message
     
