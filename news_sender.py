@@ -4,35 +4,46 @@ import requests
 from bs4 import BeautifulSoup
 from telegram import Bot
 
-def get_top_30_news():
-    """다음 뉴스 통합 랭킹(많이 본 뉴스) 상위 30개를 크롤링하는 함수"""
+def get_naver_top_30_news():
+    """네이버 6대 카테고리의 주요 뉴스를 5개씩 모아 총 30개를 반환하는 함수"""
     
-    url = "https://news.daum.net/ranking/popular"
+    categories = {
+        '100': '정치',
+        '101': '경제',
+        '102': '사회',
+        '103': '생활/문화',
+        '105': 'IT/과학',
+        '104': '세계'
+    }
+    
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     
     news_list = []
     
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
+    for section_id, category_name in categories.items():
+        url = f"https://news.naver.com/section/{section_id}"
         
-        # 다음 뉴스 랭킹 리스트 추출 (보통 ul.list_news2 안의 a.link_txt에 있음)
-        articles = soup.select('ul.list_news2 li a.link_txt')
-        
-        # 1위부터 30위까지만 추출
-        for i, article in enumerate(articles[:30], 1):
-            title = article.text.strip()
-            link = article['href']
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
             
-            # 1. 기사제목 형식으로 저장
-            news_list.append(f'{i}. <a href="{link}">{title}</a>')
+            # 네이버 뉴스 섹션의 헤드라인 기사 블록 추출
+            headlines = soup.select('.sa_text_title')
             
-    except requests.exceptions.RequestException as e:
-        print(f"❌ 뉴스 랭킹 가져오기 실패: {e}")
-        
+            # 각 카테고리별 상위 5개 기사만 추출
+            for article in headlines[:5]:
+                title = article.text.strip()
+                link = article['href']
+                
+                news_list.append(f'• [{category_name}] <a href="{link}">{title}</a>')
+                
+        except requests.exceptions.RequestException as e:
+            print(f"❌ {category_name} 뉴스 가져오기 실패: {e}")
+            continue
+            
     return news_list
 
 async def send_multiple_messages(bot_token, chat_id, messages):
@@ -64,25 +75,25 @@ def main():
         print("❌ 환경변수가 설정되지 않았습니다!")
         exit(1)
     
-    print("📰 통합 랭킹 뉴스 크롤링 중...")
+    print("📰 네이버 주요 뉴스 30개 크롤링 중...")
     
-    news_items = get_top_30_news()
+    news_items = get_naver_top_30_news()
     
     if not news_items:
         print("⚠️ 가져온 뉴스가 없습니다.")
         return
     
     messages = []
-    current_message = "📢 <b>오늘의 가장 많이 본 뉴스 Top 30</b>\n\n"
+    current_message = "📢 <b>오늘의 네이버 주요 뉴스 Top 30</b>\n\n"
     max_length = 4000
     
-    for news_item in news_items:
+    for i, news_item in enumerate(news_items):
         test_line = news_item + "\n\n"
         test_message = current_message + test_line
         
         if len(test_message) > max_length:
             messages.append(current_message.strip())
-            current_message = f"📢 <b>많이 본 뉴스 (계속)</b>\n\n{test_line}"
+            current_message = f"📢 <b>주요 뉴스 (계속)</b>\n\n{test_line}"
         else:
             current_message = test_message
     
