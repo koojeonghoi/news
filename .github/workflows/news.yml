@@ -1,4 +1,4 @@
-name: Daily Google News Bot
+name: Daily Naver News Bot
 
 on:
   schedule:
@@ -17,9 +17,11 @@ jobs:
         with:
           python-version: '3.9'
 
+      # 이 부분이 핵심! requirements.txt를 읽어오도록 수정했어.
       - name: Install dependencies
         run: |
-          pip install feedparser python-telegram-bot
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run news script
         env:
