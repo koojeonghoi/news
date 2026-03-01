@@ -5,9 +5,8 @@ from bs4 import BeautifulSoup
 from telegram import Bot
 
 def get_nate_top_30_news():
-    """네이트 시사 종합 랭킹 (많이 본 뉴스) 상위 30개를 크롤링하는 함수"""
+    """네이트 시사 종합 랭킹 상위 30개를 확실하게 크롤링하는 함수 (제목만 추출)"""
     
-    # sc=sisa 파라미터로 연예/스포츠를 제외한 종합 시사 랭킹을 타겟팅합니다.
     url = "https://news.nate.com/rank/interest?sc=sisa"
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -20,22 +19,33 @@ def get_nate_top_30_news():
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # 네이트 랭킹 리스트 영역 추출
-        items = soup.select('.mduSubjectList a, .postSubjectContent a')
-        
         count = 1
         seen_links = set()
         
-        for item in items:
+        # 페이지 내 모든 a 태그 검사
+        for item in soup.find_all('a'):
             if count > 30:
                 break
                 
-            # 태그 내부의 불필요한 공백과 줄바꿈 제거
-            title = item.text.strip().replace('\n', '').replace('\r', '')
             link = item.get('href', '')
             
-            # 텍스트가 비어있거나 '사진' 등 무의미한 텍스트 건너뛰기
-            if not title or title in ['사진', '동영상'] or not link:
+            # 네이트 뉴스 기사 본문 링크 필터링
+            if not link or '/view/' not in link:
+                continue
+            
+            # 1. 제목이 특정 태그(.tit, strong)로 감싸져 있는 경우 우선 추출
+            title_tag = item.select_one('.tit, strong, h2')
+            if title_tag:
+                title = title_tag.text.strip()
+            else:
+                # 2. 태그가 없다면 전체 텍스트에서 첫 번째 줄만 추출 (요약 내용 제거)
+                raw_text = item.text.strip().replace('\r', '')
+                if not raw_text:
+                    continue
+                title = raw_text.split('\n')[0].strip()
+                
+            # 텍스트가 너무 짧거나 무의미한 단어인 경우 건너뛰기
+            if len(title) < 5 or title in ['사진', '동영상', '포토']:
                 continue
                 
             # 상대 경로를 절대 경로로 변환
@@ -44,10 +54,12 @@ def get_nate_top_30_news():
             elif link.startswith('/'):
                 link = 'https://news.nate.com' + link
                 
-            # 중복 링크 방지
-            if link not in seen_links:
+            # 기사 고유 주소만 추출하여 중복 방지
+            base_link = link.split('?')[0]
+            
+            if base_link not in seen_links:
                 news_list.append(f'{count}. <a href="{link}">{title}</a>')
-                seen_links.add(link)
+                seen_links.add(base_link)
                 count += 1
                 
     except requests.exceptions.RequestException as e:
@@ -84,7 +96,7 @@ def main():
         print("❌ 환경변수가 설정되지 않았습니다!")
         exit(1)
     
-    print("📰 네이트 많이 본 뉴스 30개 크롤링 중...")
+    print("📰 네이트 많이 본 뉴스 30개 크롤링 중 (제목만 추출)...")
     
     news_items = get_nate_top_30_news()
     
