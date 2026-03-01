@@ -3,15 +3,15 @@ from bs4 import BeautifulSoup
 import os
 from datetime import datetime, timedelta
 
-# 깃허브 시크릿(Secrets)에서 환경 변수 가져오기 (기존 뉴스 봇과 동일한 변수명 사용)
-TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
+# 뉴스 봇과 동일한 환경 변수명 적용
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 
 def send_telegram_message(text):
-    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print("텔레그램 토큰 또는 챗 ID가 설정되지 않았습니다.")
         return
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         'chat_id': TELEGRAM_CHAT_ID,
         'text': text,
@@ -21,7 +21,6 @@ def send_telegram_message(text):
 
 def crawl_melon_new_entries():
     url = "https://www.melon.com/chart/day/index.htm"
-    # 멜론 차단 우회를 위한 User-Agent 설정
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
@@ -34,7 +33,6 @@ def crawl_melon_new_entries():
     
     for song in songs:
         rank_wrap = song.select_one('.rank_wrap')
-        # '새로 진입' 요소가 있는지 확인
         if rank_wrap and '새로 진입' in rank_wrap.get('title', ''):
             rank = song.select_one('span.rank').text
             title = song.select_one('div.ellipsis.rank01 a').text
@@ -46,8 +44,6 @@ def crawl_melon_new_entries():
 
 if __name__ == "__main__":
     new_songs = crawl_melon_new_entries()
-    
-    # 어제 날짜 구하기 (일간 차트는 전일 기준)
     yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y년 %m월 %d일")
     
     message = f"🔔 **[멜론 일간차트 신규 진입 곡]**\n기준일: {yesterday}\n\n"
