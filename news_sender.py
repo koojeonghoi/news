@@ -22,7 +22,7 @@ def get_nate_top_30_news():
         count = 1
         seen_links = set()
         
-        # 페이지 내 모든 a 태그 검사
+        # 페이지 내 모든 a 태그 검사 
         for item in soup.find_all('a'):
             if count > 30:
                 break
