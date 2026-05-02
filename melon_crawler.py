@@ -14,7 +14,7 @@ def send_telegram_message(text):
     payload = {
         'chat_id': TELEGRAM_CHAT_ID,
         'text': text
-        # 노래 제목 특수문자 에러를 막기 위해 parse_mode='Markdown' 옵션 삭제
+        # 노래 제목 특수문자 에러를 막기 위해 parse_mode='Markdown' 옵션 삭제 
     }
     response = requests.post(url, json=payload)
     if response.status_code != 200:
